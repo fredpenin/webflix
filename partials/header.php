@@ -53,6 +53,15 @@ require_once(__DIR__ . '/../config/database.php');
                 <li class="nav-item <?php echo ($CurrentPageUrl === 'movie_add') ? 'active' : ''; ?>">
                     <a class="nav-link" href="movie_add.php">Ajouter un film</a>
                 </li>
+                <li class="nav-item <?php echo ($CurrentPageUrl === 'movie_random') ? 'active' : ''; ?>">
+                    <a class="nav-link" href="movie_random.php">J'ai de la chance - Random</a>
+                </li>
+                <li class="nav-item <?php echo ($CurrentPageUrl === 'register') ? 'active' : ''; ?>">
+                    <a class="nav-link" href="register.php">S'enregistrer</a>
+                </li>
+                <li class="nav-item <?php echo ($CurrentPageUrl === 'login') ? 'active' : ''; ?>">
+                    <a class="nav-link" href="login.php">Connexion</a>
+                </li>
             </ul>
         </div>
     </nav>

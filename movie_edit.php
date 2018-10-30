@@ -1,10 +1,46 @@
 <?php 
-$currentPageTitle = 'Ajouter un film';
+// On inclue la base de donnée pour pouvoir paramétert le $CurrentPageTitle avant l'appel du header :
+require_once(__DIR__ . '/config/database.php'); 
+
+ //Récupération du film sélectionné en récupérant l'id dans l'url
+$id = isset($_GET['id']) ? $_GET['id'] : 0;
+// récup des infos du film
+$query = $db->prepare('SELECT * FROM movie WHERE id_mov = :id'); 
+$query->bindValue(':id', $id, PDO::PARAM_INT); // on s'assure que l'id est bien un entier
+$query-> execute(); // execute la requête
+$movie = $query->fetch();
+
+//renvoyer une 404 si le film n'existe pas (pour éviter le référencement de nos "404" si l'utilisateur change l'id manuellement dans l'url)
+// puis renvoie su' l'index après 5 secondes
+if ($movie === false) {
+    http_response_code(404);
+    echo "404";
+    
+    require_once(__DIR__.'/partials/header.php'); ?>
+    <h1>404. Redirection dans 5 secondes...</h1>
+    <script>
+        setTimeout(function(){
+            window.location = 'index.php';
+        }, 5000);
+    </script>
+    <?php require_once(__DIR__.'/partials/footer.php');
+    die();
+}
+///////////////////////////////////////////////
+
+$currentPageTitle = 'Modifier la fiche du film';
 // On inclue le fichier header.php sur la page :
 require_once(__DIR__ . '/partials/header.php'); 
 
-//traitement du formulaire
-$titleMov = $descripMov = $vidLinkMov = $coverMov = $releasedAtMov = $idCat = null;
+
+
+// Implémente le formulaire avec les données actuellement en base
+$titleMov = $movie['title_mov'];
+$descripMov = $movie['description_mov'];
+$vidLinkMov = $movie['video_link_mov'];
+$coverMov = $movie['cover_mov'];
+$releasedAtMov = $movie['released_at_mov'];
+$idCat = $movie['id_cat'];
 
 // le formulaire est soumis
 if (!empty($_POST)) {
@@ -64,33 +100,35 @@ if (!empty($_POST)) {
     }
     // S'il n'y a pas d'erreurs dans le formulaire
     if (empty($errors)) {
-         $query = $db->prepare('
-            INSERT INTO movie (`title_mov`, `description_mov`, `video_link_mov`, `cover_mov`, `released_at_mov`, `id_cat`) VALUES (:title, :description, :video_link, :cover, :released_at, :id_cat)
-        ');
-        $query->bindValue(':title', $titleMov, PDO::PARAM_STR);
-        $query->bindValue(':description', $descripMov, PDO::PARAM_STR);
-        $query->bindValue(':video_link', $vidLinkMov, PDO::PARAM_STR);
-        $query->bindValue(':cover', $fileName, PDO::PARAM_STR);
-        $query->bindValue(':released_at', $releasedAtMov, PDO::PARAM_STR);
-        $query->bindValue(':id_cat', $idCat, PDO::PARAM_INT);
+         $updateQuery = $db->prepare('
+            UPDATE movie SET `title_mov` = :title, `description_mov` = :description, `video_link_mov` = :video_link, `cover_mov` = :cover, `released_at_mov` = :released_at, `id_cat` = :id_cat 
+            WHERE id_mov = :id;
+            ');
+        $updateQuery->bindValue(':title', $titleMov, PDO::PARAM_STR);
+        $updateQuery->bindValue(':description', $descripMov, PDO::PARAM_STR);
+        $updateQuery->bindValue(':video_link', $vidLinkMov, PDO::PARAM_STR);
+        $updateQuery->bindValue(':cover', $fileName, PDO::PARAM_STR);
+        $updateQuery->bindValue(':released_at', $releasedAtMov, PDO::PARAM_STR);
+        $updateQuery->bindValue(':id_cat', $idCat, PDO::PARAM_INT);
 
-        if ($query->execute()) { // On insère le film dans la BDD
+        $updateQuery->bindValue(':id', $id, PDO::PARAM_INT);
+
+        if ($updateQuery->execute()) { // On enregistre les modifs dans la BDD
             $success = true;
         }
     }
 }
+
+
 ?>
 
-
-
     <main class="container">
-        <h1>Ajout d'un film</h1>
+        <h1>WebFlix</h1>
+        <h4>Modifier la fiche du film</h4>
 
         <?php if (isset($success) && $success) { ?>
         <div class="alert alert-success alert-dismissible fade show">
-            Le film <strong>
-                <?php echo $titleMov; ?></strong> a bien été ajouté avec l'id <strong>
-                <?php echo $db->lastInsertId(); ?></strong> !
+            Le film <strong><?php echo $titleMov; ?></strong> a été modifié avec succès. <strong>
             <button type="button" class="close" data-dismiss="alert">
                 <span aria-hidden="true">&times;</span>
             </button>
@@ -185,15 +223,15 @@ if (!empty($_POST)) {
                     } ?>  
                 </div>
 
-                <button class="btn btn-lg btn-block btn-success text-uppercase font-weight-bold">Ajouter le film</button>
+                <button class="btn btn-lg btn-block btn-success text-uppercase font-weight-bold">Enregistrer les modifications</button>
             </div>
         </form>
-
 
 
     </main>
 
 
-    <?php 
+
+<?php 
 // On inclue le fichier footer.php sur la page :
 require_once(__DIR__ . '/partials/footer.php'); ?>
