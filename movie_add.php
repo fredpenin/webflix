@@ -4,7 +4,7 @@ $currentPageTitle = 'Ajouter un film';
 require_once(__DIR__ . '/partials/header.php'); 
 
 //traitement du formulaire
-$titleMov = $descripMov = $vidLinkMov = $coverMov = $releasedAtMov = $nameCat = null;
+$titleMov = $descripMov = $vidLinkMov = $coverMov = $releasedAtMov = $idCat = null;
 
 // le formulaire est soumis
 if (!empty($_POST)) {
@@ -13,6 +13,8 @@ if (!empty($_POST)) {
     $vidLinkMov = $_POST['vidLinkMov'];
     $coverMov = $_FILES['coverMov']; // Tableau avec toutes les infos sur l'image uploadée
     $releasedAtMov = $_POST['releasedAtMov'];
+    $idCat = $_POST['idCat'];
+    //$nameCat = $_POST['nameCat'];
 
     // Définir un tableau d'erreur vide qui va se remplir après chaque erreur
     $errors = [];
@@ -37,12 +39,12 @@ if (!empty($_POST)) {
         $errors['releasedAtMov'] = 'La date de sortie n\'est pas valide';
     }
     // Vérifier la catégorie
-    if (empty($nameCat)) {
-        $errors['nameCat'] = 'La catégorie n\'est pas valide';
+    if (empty($idCat) || !in_array($idCat, ['1', '2', '3', '4', '5', '6', '7', '8'])) {
+        $errors['idCat'] = 'La catégorie n\'est pas valide';
     }
 
     // Upload de l'image
-    var_dump($coverMov);
+    //var_dump($coverMov);
     $file = $coverMov['tmp_name']; // Emplacement du fichier temporaire
     $fileName = 'img/jackets/'.$coverMov['name']; // Variable pour la base de données
     $finfo = finfo_open(FILEINFO_MIME_TYPE); // Permet d'ouvrir un fichier
@@ -62,14 +64,16 @@ if (!empty($_POST)) {
     }
     // S'il n'y a pas d'erreurs dans le formulaire
     if (empty($errors)) {
-        $query = $db->prepare('
-            INSERT INTO movie (`title_mov`, `description_mov`, `video_link_mov`, `cover_mov`, `released_at_mov`) VALUES (:title, :description, :video_link, :cover, :released_at)
+         $query = $db->prepare('
+            INSERT INTO movie (`title_mov`, `description_mov`, `video_link_mov`, `cover_mov`, `released_at_mov`, `id_cat`) VALUES (:title, :description, :video_link, :cover, :released_at, :id_cat)
         ');
-        $query->bindValue(':title_mov', $titleMov, PDO::PARAM_STR);
-        $query->bindValue(':description_mov', $descripMov, PDO::PARAM_STR);
-        $query->bindValue(':video_link_mov', $vidLinkMov, PDO::PARAM_STR);
-        $query->bindValue(':cover_mov', $coverMov, PDO::PARAM_STR);
-        $query->bindValue(':released_at_mov', $releasedAtMov, PDO::PARAM_STR);
+        $query->bindValue(':title', $titleMov, PDO::PARAM_STR);
+        $query->bindValue(':description', $descripMov, PDO::PARAM_STR);
+        $query->bindValue(':video_link', $vidLinkMov, PDO::PARAM_STR);
+        $query->bindValue(':cover', $fileName, PDO::PARAM_STR);
+        $query->bindValue(':released_at', $releasedAtMov, PDO::PARAM_STR);
+        $query->bindValue(':id_cat', $idCat, PDO::PARAM_INT);
+
         if ($query->execute()) { // On insère le film dans la BDD
             $success = true;
         }
@@ -79,65 +83,111 @@ if (!empty($_POST)) {
 
 
 
-
-
     <main class="container">
         <h1>Ajout d'un film</h1>
-            <!-- ////////// Formulaire /////////// -->
-            <form method="POST" enctype="multipart/form-data">
-                <div class="container">
-                    <div class="row">
-                        <!-- Titre -->
-                        <div class="form-group col-sm-12 col-md-6">
-                            <label for="titleMov">Titre : </label>
-                            <input type="text" name="titleMov" class="form-control <?php echo isset($errors['titleMov']) ? 'is-invalid' : null; ?>" id="titleMov" placeholder="Entrez le titre du film">
-                        </div>
-                        <!-- Date de sortie -->
-                        <div class="form-group col-sm-12 col-md-6">
-                            <label for="releasedAtMov">Date de sortie : </label>
-                            <input type="date" name="releasedAtMov" class="form-control <?php echo isset($errors['releasedAtMov']) ? 'is-invalid' : null; ?>" id="releasedAtMov" placeholder="Saisir la date de sortie du film">
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <!-- Desciption -->
-                        <div class="form-group col-sm-12">
-                            <label for="descripMov">Description : </label>
-                            <textarea class="form-control <?php echo isset($errors['descripMov']) ? 'is-invalid' : null; ?>" name="descripMov" id="descripMov" rows="5" placeholder="Saisir une description pour ce film"></textarea>
-                        </div>
-                    </div>
+        <?php if (isset($success) && $success) { ?>
+        <div class="alert alert-success alert-dismissible fade show">
+            Le film <strong>
+                <?php echo $titleMov; ?></strong> a bien été ajouté avec l'id <strong>
+                <?php echo $db->lastInsertId(); ?></strong> !
+            <button type="button" class="close" data-dismiss="alert">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <?php } ?>
 
-                    <div class="row">
-                        <!-- Couveture -->
-                        <div class="form-group col-sm-12 col-md-6">
-                            <label for="coverMov">Couverture : </label>
-                            <input type="file" name="coverMov" class="form-control <?php echo isset($errors['coverMov']) ? 'is-invalid' : null; ?>" id="coverMov" placeholder="Choisir une jaquette">
-                        </div>
-                        <!-- URL de la vidéo -->
-                        <div class="form-group col-sm-12 col-md-6">
-                            <label for="vidLinkMov">URL de la vidéo : </label>
-                            <input type="text" name="vidLinkMov" class="form-control <?php echo isset($errors['vidLinkMov']) ? 'is-invalid' : null; ?>" id="vidLinkMov" placeholder="Saisir l'URL de la vidéo">
-                        </div>
+        <!-- ////////// Formulaire /////////// -->
+        <form method="POST" enctype="multipart/form-data">
+            <div class="container">
+                <div class="row">
+                    <!-- Titre -->
+                    <div class="form-group col-sm-12 col-md-6">
+                        <label for="titleMov">Titre : </label>
+                        <input type="text" name="titleMov" class="form-control <?php echo isset($errors['titleMov']) ? 'is-invalid' : null; ?>" 
+                                id="titleMov" placeholder="Entrez le titre du film" value="<?php echo $titleMov; ?>">
+                        <?php if (isset($errors['titleMov'])) {
+                            echo '<div class="invalid-feedback">';
+                            echo $errors['titleMov'];
+                            echo '</div>';
+                        } ?>
                     </div>
-                    <div class="row">
-                        <!-- Catégorie -->
-                        <label for="nameCat">Catégorie :</label>
-                        <select name="nameCat" id="nameCat" class="form-control <?php echo isset($errors['nameCat']) ? 'is-invalid' : null; ?>">
-                            <option value="">Choisir la catégorie</option>
-                            <option <?php echo ($nameCat==='SF' ) ? 'selected' : '' ; ?> value="SF">SF</option>
-                            <option <?php echo ($nameCat==='Thriller' ) ? 'selected' : '' ; ?> value="Thriller">Thriller</option>
-                            <option <?php echo ($nameCat==='Comédie' ) ? 'selected' : '' ; ?> value="Comédie">Comédie</option>
-                            <option <?php echo ($nameCat==='Autre' ) ? 'selected' : '' ; ?> value="Autre">Autre</option>
-                            <option <?php echo ($nameCat==='drame' ) ? 'selected' : '' ; ?> value="drame">drame</option>
-                            <option <?php echo ($nameCat==='action' ) ? 'selected' : '' ; ?> value="action">action</option>
-                            <option <?php echo ($nameCat==='fantastique' ) ? 'selected' : '' ; ?> value="fantastique">fantastique</option>
-                            <option <?php echo ($nameCat==='horreur' ) ? 'selected' : '' ; ?> value="horreur">horreur</option>
-                        </select>
+                    <!-- Date de sortie -->
+                    <div class="form-group col-sm-12 col-md-6">
+                        <label for="releasedAtMov">Date de sortie : </label>
+                        <input type="date" name="releasedAtMov" class="form-control <?php echo isset($errors['releasedAtMov']) ? 'is-invalid' : null; ?>" 
+                                id="releasedAtMov" placeholder="Saisir la date de sortie du film" value="<?php echo $releasedAtMov; ?>">
+                        <?php if (isset($errors['releasedAtMov'])) {
+                            echo '<div class="invalid-feedback">';
+                            echo $errors['releasedAtMov'];
+                            echo '</div>';
+                        } ?>                    
                     </div>
-
-                    <button class="btn btn-lg btn-block btn-success text-uppercase font-weight-bold">Ajouter le film</button>
                 </div>
-            </form>
+
+                <div class="row">
+                    <!-- Desciption -->
+                    <div class="form-group col-sm-12">
+                        <label for="descripMov">Description : </label>
+                        <textarea class="form-control <?php echo isset($errors['descripMov']) ? 'is-invalid' : null; ?>" name="descripMov" id="descripMov" 
+                                rows="5" placeholder="Saisir une description pour ce film" value="<?php echo $descripMov; ?>"></textarea>
+                        <?php if (isset($errors['descripMov'])) {
+                            echo '<div class="invalid-feedback">';
+                            echo $errors['descripMov'];
+                            echo '</div>';
+                        } ?>                     
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Couveture -->
+                    <div class="form-group col-sm-12 col-md-6">
+                        <label for="coverMov">Couverture : </label>
+                        <input type="file" name="coverMov" class="form-control <?php echo isset($errors['coverMov']) ? 'is-invalid' : null; ?>" id="coverMov" 
+                                placeholder="Choisir une jaquette">
+                        <?php if (isset($errors['coverMov'])) {
+                            echo '<div class="invalid-feedback">';
+                            echo $errors['coverMov'];
+                            echo '</div>';
+                        } ?>                          
+                    </div>
+                    <!-- URL de la vidéo -->
+                    <div class="form-group col-sm-12 col-md-6">
+                        <label for="vidLinkMov">URL de la vidéo : </label>
+                        <input type="text" name="vidLinkMov" class="form-control <?php echo isset($errors['vidLinkMov']) ? 'is-invalid' : null; ?>" 
+                                id="vidLinkMov" placeholder="Saisir l'URL de la vidéo" value="<?php echo $vidLinkMov; ?>">
+                        <?php if (isset($errors['vidLinkMov'])) {
+                            echo '<div class="invalid-feedback">';
+                            echo $errors['vidLinkMov'];
+                            echo '</div>';
+                        } ?>                                
+                    </div>
+                </div>
+                <div class="row">
+                    <!-- Catégorie -->
+                    <label for="idCat">Catégorie :</label>
+                    <select name="idCat" id="idCat" class="form-control <?php echo isset($errors['idCat']) ? 'is-invalid' : null; ?>">
+                        <option value="">Choisir la catégorie</option>
+                        <option <?php echo ($idCat=='1' ) ? 'selected' : '' ; ?> value="1">SF</option>
+                        <option <?php echo ($idCat=='2' ) ? 'selected' : '' ; ?> value="2">Thriller</option>
+                        <option <?php echo ($idCat=='3' ) ? 'selected' : '' ; ?> value="3">Comédie</option>
+                        <option <?php echo ($idCat=='4' ) ? 'selected' : '' ; ?> value="4">Autre</option>
+                        <option <?php echo ($idCat=='5' ) ? 'selected' : '' ; ?> value="5">drame</option>
+                        <option <?php echo ($idCat=='6' ) ? 'selected' : '' ; ?> value="6">action</option>
+                        <option <?php echo ($idCat=='7' ) ? 'selected' : '' ; ?> value="7">fantastique</option>
+                        <option <?php echo ($idCat=='8' ) ? 'selected' : '' ; ?> value="8">horreur</option>
+                    </select>
+                    <?php if (isset($errors['idCat'])) {
+                            echo '<div class="invalid-feedback">';
+                            echo $errors['idCat'];
+                            echo ' - $idCat = ' . $idCat;
+                            echo '</div>';
+                    } ?>  
+                </div>
+
+                <button class="btn btn-lg btn-block btn-success text-uppercase font-weight-bold">Ajouter le film</button>
+            </div>
+        </form>
 
 
 
