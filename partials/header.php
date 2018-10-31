@@ -5,6 +5,10 @@ require_once(__DIR__ . '/../config/functions.php');
 require_once(__DIR__ . '/../config/config.php');
 // On inclue le fichier database.php sur la page :
 require_once(__DIR__ . '/../config/database.php'); 
+
+//lance la session sur chaque page
+session_start();
+
 ?>
 
 <!DOCTYPE html>
@@ -37,6 +41,17 @@ require_once(__DIR__ . '/../config/database.php');
 <header>
     <nav class="navbar navbar-expand-lg navbar-light bg-warning progress-bar-striped progress-bar-animated">
         <a class="navbar-brand" href="#">WebFlix</a>
+
+        <?php
+        // Si on est connecté, le username s'affiche dans la navbar
+            if ($_SESSION['sessionActive'] === true) {
+                echo '<div>';
+                    echo 'Connecté en tant que <br /> <strong>' . $_SESSION['username'] . '</strong>';
+                    echo '<form method="post"><button>Déconnexion</button></form>';
+                echo '</div>';
+            }
+        ?>
+
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -46,9 +61,6 @@ require_once(__DIR__ . '/../config/database.php');
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item <?php echo ($CurrentPageUrl === 'index') ? 'active' : ''; ?>">
                     <a class="nav-link" href="index.php">Accueil </a>
-                </li>
-                <li class="nav-item <?php echo ($CurrentPageUrl === 'movie_single') ? 'active' : ''; ?>">
-                    <a class="nav-link" href="movie_single.php">Voir un film</a>
                 </li>
                 <li class="nav-item <?php echo ($CurrentPageUrl === 'movie_add') ? 'active' : ''; ?>">
                     <a class="nav-link" href="movie_add.php">Ajouter un film</a>

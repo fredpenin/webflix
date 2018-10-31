@@ -39,7 +39,7 @@ if (!empty($_POST)) {
 
     // S'il n'y a pas d'erreurs dans le formulaire
     if (empty($errors)) {
-        //hash du password pour la bdd
+        // Hachage de mot de passe selon l'algorithme bcrypt
         $pwdUser = password_hash($pwdUser, PASSWORD_DEFAULT);
         
         $query = $db->prepare('

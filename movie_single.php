@@ -32,6 +32,24 @@ if ($movie === false) {
 $currentPageTitle = 'Regarder ce film';
 // On inclue le fichier header.php sur la page :
 require_once(__DIR__ . '/partials/header.php'); 
+
+//////// Si utilisateur non connecté ////////
+if (!isset($_SESSION['sessionActive']) || ($_SESSION['sessionActive']) !== true){
+    http_response_code(403);
+    echo "403 - vous devez être connecté pour accéder à cette page.";
+
+    require_once(__DIR__.'/partials/header.php'); ?>
+    <h1>403. Redirection dans 5 secondes...</h1>
+    <script>
+        setTimeout(function(){
+            window.location = 'index.php';
+        }, 5000);
+    </script>
+    <?php require_once(__DIR__.'/partials/footer.php');
+    die();
+}
+///////////////////////////////////////////////
+
 ?>
 
 
