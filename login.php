@@ -1,4 +1,5 @@
 <?php 
+$currentPageTitle = 'Login';
 // On inclue le fichier header.php sur la page :
 require_once(__DIR__ . '/partials/header.php'); 
 

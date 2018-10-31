@@ -2,7 +2,7 @@
 // On inclue la base de donnée pour pouvoir paramétert le $CurrentPageTitle avant l'appel du header :
 require_once(__DIR__ . '/config/database.php'); 
 
-$currentPageTitle = 'Modifier la fiche du film';
+$currentPageTitle = 'Random';
 
 // On inclue le fichier header.php sur la page :
 require_once(__DIR__ . '/partials/header.php'); 
